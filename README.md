@@ -10,3 +10,5 @@ Russian (RUS):
 Uzbek (UZB)
   Yandex Eats Backend Nusxasi
   Ushbu loyiha Yandex Eats platformasining backend nusxasini yaratishni maqsad qilgan va Django yordamida ishlab chiqilgan. Loyiha foydalanuvchilarni boshqarish, restoranlar ro‘yxati, menyuni boshqarish,              buyurtmalarni qayta ishlash va yetkazib berish logistikasi kabi asosiy funksiyalarni simulyatsiya qilishni ko‘zda tutadi. Loyiha kuchli va kengaytiriladigan backend, samarali ma'lumotlar bazasi tuzilmasi va API     endpointlarini yaratishga qaratilgan.
+  
+![Yandex Eats Database Structure](https://github.com/user-attachments/assets/56d0af26-03ee-4b89-873e-60e02afb1157)
