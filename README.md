@@ -55,7 +55,7 @@ Ushbu loyiha Yandex Eats platformasining backend nusxasini yaratish uchun Django
 ---
 
 ## Database Structure  
-The backend relies on a robust and scalable database design tailored to simulate the functionalities of Yandex Eats. The structure includes user roles, branch locations, menu management, orders, and delivery tracking.  
+The backend relies on a robust and scalable database design tailored to simulate the functionalities of Yandex Eats. The structure includes user roles, branch locations, menu management, orders, and delivery tracking.
 
 ![Yandex Eats Database Structure](https://github.com/user-attachments/assets/cb5e0a47-9938-4e48-99b9-eb2d6ee3f7f4)
 
