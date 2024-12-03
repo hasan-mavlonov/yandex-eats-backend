@@ -7,6 +7,8 @@ class UserManager(BaseUserManager):
         """
         Create and return a regular user.
         """
+        if not phone:
+            raise ValueError("The Phone field must be set")
         user = self.model(phone=phone, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -18,6 +20,11 @@ class UserManager(BaseUserManager):
         """
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+
+        if not extra_fields.get('is_staff'):
+            raise ValueError('Superuser must have is_staff=True.')
+        if not extra_fields.get('is_superuser'):
+            raise ValueError('Superuser must have is_superuser=True.')
 
         return self.create_user(phone, password, **extra_fields)
 
@@ -47,3 +54,19 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.name} ({self.phone}) - {self.role}"
+
+
+class PhoneVerification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='phone_verification')
+    phone_verification_code = models.CharField(max_length=6, unique=True)  # Increased to 6 for better security
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user.phone} - Verification Code: {self.phone_verification_code}'
+
+    class Meta:
+        verbose_name = 'Phone Verification'
+        verbose_name_plural = 'Phone Verifications'
+        ordering = ['-created_at']  # Newest first
+
+
