@@ -7,7 +7,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from users.models import User, PhoneVerification
+from users.models import User, PhoneVerification, Company, Branch
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -108,3 +108,21 @@ class ResendPhoneCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhoneVerification
         fields = ['phone']
+
+
+class CompanyRegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['name']
+
+
+class BranchRegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Branch
+        fields = ['name']
+
+    def validate_name(self, name):
+        company_id = self.context['view'].kwargs.get('company_id')
+        if Branch.objects.filter(name=name, company_id=company_id).exists():
+            raise serializers.ValidationError('Branch with this name already exists in the company.')
+        return name

@@ -1,16 +1,16 @@
 import threading
 
 from django.shortcuts import render
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.models import User
+from users.models import User, Company, Branch
 from users.serializers import RegisterSerializer, PhoneVerificationSerializer, LoginSerializer, \
-    ResendPhoneCodeSerializer
+    ResendPhoneCodeSerializer, CompanyRegisterSerializer, BranchRegisterSerializer
 from users.signals import send_verification_phone
 
 
@@ -83,3 +83,28 @@ class ResendPhoneVerificationView(APIView):
             'message': "New code has been sent to your phone number"
         }
         return Response(response, status=status.HTTP_200_OK)
+
+
+class CompanyRegisterView(generics.CreateAPIView):
+    serializer_class = CompanyRegisterSerializer
+    queryset = Company.objects.all()
+    permission_classes = [IsAdminUser]
+    pagination_class = PageNumberPagination
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+
+class BranchRegisterView(generics.CreateAPIView):
+    serializer_class = BranchRegisterSerializer
+    queryset = Branch.objects.all()
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+
+    def perform_create(self, serializer):
+        company_id = self.kwargs.get('company_id')
+        try:
+            company = Company.objects.get(id=company_id)
+        except Company.DoesNotExist:
+            raise serializers.ValidationError({'company': 'Invalid company ID.'})
+        serializer.save(created_by=self.request.user, company=company)
