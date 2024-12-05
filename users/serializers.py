@@ -13,7 +13,13 @@ from users.models import User, PhoneVerification, Company, Branch
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        fields = ['id', 'phone', 'name', 'role', 'is_active', 'longitude', 'latitude', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def update(self, instance, validated_data):
+        if 'password' in validated_data:
+            instance.set_password(validated_data.pop('password'))
+        return super().update(instance, validated_data)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -113,7 +119,7 @@ class ResendPhoneCodeSerializer(serializers.ModelSerializer):
 class CompanyRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
-        fields = ['name']
+        fields = ['name', la]
 
 
 class BranchRegisterSerializer(serializers.ModelSerializer):

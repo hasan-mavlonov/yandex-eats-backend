@@ -9,8 +9,9 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import User, Company, Branch
+from users.pagination import UserPagination
 from users.serializers import RegisterSerializer, PhoneVerificationSerializer, LoginSerializer, \
-    ResendPhoneCodeSerializer, CompanyRegisterSerializer, BranchRegisterSerializer
+    ResendPhoneCodeSerializer, CompanyRegisterSerializer, BranchRegisterSerializer, UserSerializer
 from users.signals import send_verification_phone
 from users.utils import get_location_from_ip
 
@@ -93,7 +94,7 @@ class ResendPhoneVerificationView(APIView):
 class CompanyRegisterView(generics.CreateAPIView):
     serializer_class = CompanyRegisterSerializer
     queryset = Company.objects.all()
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated]
     pagination_class = PageNumberPagination
 
     def perform_create(self, serializer):
@@ -125,3 +126,27 @@ class BranchRegisterView(generics.CreateAPIView):
             longitude=longitude,
             latitude=latitude
         )
+
+
+class UserListCreateView(generics.ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = UserPagination
+
+    def get_queryset(self):
+        # Optionally filter users based on query parameters
+        role = self.request.query_params.get('role', None)
+        if role:
+            return self.queryset.filter(role=role)
+        return self.queryset
+
+
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = UserPagination
+
+    def perform_update(self, serializer):
+        serializer.save()
