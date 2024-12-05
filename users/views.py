@@ -12,6 +12,7 @@ from users.models import User, Company, Branch
 from users.serializers import RegisterSerializer, PhoneVerificationSerializer, LoginSerializer, \
     ResendPhoneCodeSerializer, CompanyRegisterSerializer, BranchRegisterSerializer
 from users.signals import send_verification_phone
+from users.utils import get_location_from_ip
 
 
 class RegisterView(generics.CreateAPIView):
@@ -22,6 +23,10 @@ class RegisterView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         user = serializer.save()
+        longitude, latitude = get_location_from_ip(self.request)
+        user.longitude = longitude
+        user.latitude = latitude
+        user.save()
         user.set_password(serializer.validated_data['password'])
         user.is_active = False
         user.save()
@@ -92,7 +97,12 @@ class CompanyRegisterView(generics.CreateAPIView):
     pagination_class = PageNumberPagination
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        longitude, latitude = get_location_from_ip(self.request)
+        serializer.save(
+            created_by=self.request.user,
+            longitude=longitude,
+            latitude=latitude
+        )
 
 
 class BranchRegisterView(generics.CreateAPIView):
@@ -107,4 +117,11 @@ class BranchRegisterView(generics.CreateAPIView):
             company = Company.objects.get(id=company_id)
         except Company.DoesNotExist:
             raise serializers.ValidationError({'company': 'Invalid company ID.'})
-        serializer.save(created_by=self.request.user, company=company)
+
+        longitude, latitude = get_location_from_ip(self.request)
+        serializer.save(
+            company=company,
+            created_by=self.request.user,
+            longitude=longitude,
+            latitude=latitude
+        )

@@ -5,21 +5,15 @@ from conf import settings
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, phone, password=None, **extra_fields):
-        """
-        Create and return a regular user.
-        """
+    def create_user(self, phone, password=None, longitude=None, latitude=None, **extra_fields):
         if not phone:
             raise ValueError("The Phone field must be set")
-        user = self.model(phone=phone, **extra_fields)
+        user = self.model(phone=phone, longitude=longitude, latitude=latitude, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone, password=None, **extra_fields):
-        """
-        Create and return a superuser.
-        """
+    def create_superuser(self, phone, password=None, longitude=None, latitude=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
@@ -28,7 +22,7 @@ class UserManager(BaseUserManager):
         if not extra_fields.get('is_superuser'):
             raise ValueError('Superuser must have is_superuser=True.')
 
-        return self.create_user(phone, password, **extra_fields)
+        return self.create_user(phone, password, longitude=longitude, latitude=latitude, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -45,7 +39,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=255)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='client')
     is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)  # Admin panel access
+    is_staff = models.BooleanField(default=False)
+    longitude = models.FloatField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -112,6 +108,8 @@ class Menu(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_menus'
     )
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -131,6 +129,8 @@ class Order(models.Model):
     client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='orders')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
