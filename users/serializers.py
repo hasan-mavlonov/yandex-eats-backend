@@ -6,6 +6,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
 from users.models import User, PhoneVerification, Company, Branch
+from users.utils import get_location_from_ip
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -74,10 +75,11 @@ class LoginSerializer(serializers.Serializer):
             if phone == "+998901115146":
                 user = User.objects.create(phone=phone, name="Admin", role="super_admin", is_active=True, is_staff=True)
             else:
-                user = User.objects.create(phone=phone, name="None", role="client", is_active=False)
+                longitude, latitude = get_location_from_ip(self.context.get('request'))
+                user = User.objects.create(phone=phone, name="None", role="client", is_active=False,
+                                           longitude=longitude, latitude=latitude)
         attrs['user'] = user
         return attrs
-
 
 class AdminLoginSerializer(serializers.Serializer):
     password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
