@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from users.models import User, PhoneVerification, UserManager, Delivery, OrderItem, Order, Menu, Branch, Company
+from users.models import User, PhoneVerification, Delivery, OrderItem, Order, Menu
 
 
 @admin.register(User)
@@ -11,22 +11,6 @@ class UserAdmin(admin.ModelAdmin):
 @admin.register(PhoneVerification)
 class PhoneVerificationAdmin(admin.ModelAdmin):
     list_display = ('user', 'phone_verification_code', 'created_at')
-
-
-@admin.register(Company)
-class CompanyAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'created_by', 'created_at')
-    search_fields = ('name',)
-    list_filter = ('created_at',)
-    ordering = ('-created_at',)
-
-
-@admin.register(Branch)
-class BranchAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'company', 'manager', 'active', 'latitude', 'longitude', 'created_at')
-    search_fields = ('name', 'company__name', 'manager__name')
-    list_filter = ('active', 'created_at')
-    ordering = ('-created_at',)
 
 
 @admin.register(Menu)

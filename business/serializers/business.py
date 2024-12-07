@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from users.models import Company, Branch
+
+from business.models import Company, Branch
 
 
 class CompanyRegisterSerializer(serializers.ModelSerializer):

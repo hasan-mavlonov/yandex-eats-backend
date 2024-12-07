@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
-    'drf_spectacular_sidecar',  # Optional, for Swagger UI
+    'drf_spectacular_sidecar',
+    'business',
 ]
 
 MIDDLEWARE = [
@@ -158,7 +159,7 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'My API',
     'DESCRIPTION': 'API documentation for my project',
     'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,  # Set to True if you want the schema included in the API views
+    'SERVE_INCLUDE_SCHEMA': False,  # Set to True if you want the schema included in the API serializers
     'SWAGGER_UI_SETTINGS': {
         'persistAuthorization': True,  # Allows token persistence in Swagger
     },

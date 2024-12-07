@@ -1,8 +1,9 @@
 from rest_framework import generics, serializers
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
-from users.models import Company, Branch
-from users.serializers.business import CompanyRegisterSerializer, BranchRegisterSerializer
+
+from business.models import Company, Branch
+from business.serializers.business import CompanyRegisterSerializer, BranchRegisterSerializer
 from users.utils import get_location_from_ip
 
 

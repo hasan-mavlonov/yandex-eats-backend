@@ -1,6 +1,6 @@
 from django.urls import path, include
 
-from users.views.business import CompanyRegisterView, BranchRegisterView
+from business.views.business import CompanyRegisterView, BranchRegisterView
 
 urlpatterns = [
     path('company/register/', CompanyRegisterView.as_view(), name='company-register'),
