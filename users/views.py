@@ -1,63 +1,37 @@
 import threading
+from datetime import timedelta
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.utils import timezone
 from rest_framework import generics, status, serializers
+from rest_framework.generics import GenericAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.models import User, Company, Branch
+from users.models import User, Company, Branch, PhoneVerification
 from users.pagination import UserPagination
-from users.serializers import RegisterSerializer, PhoneVerificationSerializer, LoginSerializer, \
-    ResendPhoneCodeSerializer, CompanyRegisterSerializer, BranchRegisterSerializer, UserSerializer
-from users.signals import send_verification_phone
+from users.serializers import PhoneVerificationSerializer, LoginSerializer, CompanyRegisterSerializer, \
+    BranchRegisterSerializer, UserSerializer, AddUserSerializer, \
+    PhoneVerificationRequestSerializer, AdminLoginSerializer
+from users.signals import send_verification_phone, send_verification_code
 from users.utils import get_location_from_ip
 
 
-class RegisterView(generics.CreateAPIView):
-    serializer_class = RegisterSerializer
+class AddUserView(generics.CreateAPIView):
+    serializer_class = AddUserSerializer
     queryset = User.objects.all()
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
     pagination_class = PageNumberPagination
 
     def perform_create(self, serializer):
         user = serializer.save()
-        longitude, latitude = get_location_from_ip(self.request)
-        user.longitude = longitude
-        user.latitude = latitude
         user.save()
-        user.set_password(serializer.validated_data['password'])
         user.is_active = False
         user.save()
         return user
-
-
-class PhoneConfirmationView(generics.GenericAPIView):
-    permission_classes = [AllowAny]
-    serializer_class = PhoneVerificationSerializer
-    pagination_class = PageNumberPagination
-
-    def post(self, request):
-        serializer = PhoneVerificationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        validated_data = serializer.validated_data
-        user = validated_data.get('user')
-        phone_verification_code = validated_data.get('phone_verification_instance')
-
-        if user and phone_verification_code:
-            user.is_active = True
-            user.save()
-            phone_verification_code.delete()
-
-            response = {
-                'success': True,
-                'message': "Phone verified successfully!"
-            }
-            return Response(response, status=status.HTTP_200_OK)
-
-        return Response({"error": "Invalid data"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
@@ -66,29 +40,45 @@ class LoginView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data.get('user')
-        refresh = RefreshToken.for_user(user=serializer.validated_data['user'])
-        response = {
-            'access_token': str(refresh.access_token),
-            'refresh_token': str(refresh),
-        }
-        return Response(response, status=status.HTTP_200_OK)
+        phone = serializer.validated_data.get('phone')
+        user = serializer.validated_data['user']
+        if user.is_staff or user.is_superuser:
+            return redirect('admin-login')
+        if not user.is_active:
+            return redirect('send-phone-verification-code')
+        else:
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+
+        return Response({
+            'message': 'User logged in successfully!',
+            'access_token': access_token,
+            'refresh_token': refresh_token
+        }, status=status.HTTP_200_OK)
 
 
-class ResendPhoneVerificationView(APIView):
-    permission_classes = [AllowAny]
-    serializer_class = ResendPhoneCodeSerializer
+class AdminLoginView(APIView):
+    serializer_class = AdminLoginSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        phone_thread = threading.Thread(target=send_verification_phone, args=('phone',))
-        send_verification_phone(phone=serializer.validated_data['phone'])
-        response = {
-            'success': True,
-            'message': "New code has been sent to your phone number"
-        }
-        return Response(response, status=status.HTTP_200_OK)
+
+        # Get the user from validated data
+        user = serializer.validated_data['user']
+
+        # Generate the refresh and access tokens for the authenticated admin user
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
+        # Return the response with the tokens
+        return Response({
+            'message': 'Admin logged in successfully!',
+            'access_token': access_token,
+            'refresh_token': refresh_token
+        }, status=status.HTTP_200_OK)
 
 
 class CompanyRegisterView(generics.CreateAPIView):
@@ -150,3 +140,60 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         serializer.save()
+
+
+class PhoneVerificationView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = PhoneVerificationSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data.get('user')
+        phone_verification_code = serializer.validated_data.get('phone_verification_instance')
+
+        # If user and phone verification code are valid
+        if user and phone_verification_code:
+            # Activate user after verification
+            user.is_active = True
+            user.save()
+
+            # Delete the phone verification instance (optional)
+            phone_verification_code.delete()
+
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+
+            return Response({
+                'message': 'Phone verified successfully!',
+                'access_token': access_token,
+                'refresh_token': refresh_token
+            }, status=status.HTTP_200_OK)
+
+        return Response({"error": "Invalid data or code"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SendPhoneVerificationCodeView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = PhoneVerificationRequestSerializer
+
+    def post(self, request):
+        phone = request.data.get('phone')
+
+        if not phone:
+            return Response({'error': 'Phone number is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(phone=phone)
+        except User.DoesNotExist:
+            return Response({'error': 'User with this phone number does not exist.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Send the verification code via SMS
+        send_verification_code(phone)
+
+        return Response({'message': 'Verification code sent successfully! Please check your phone.'},
+                        status=status.HTTP_200_OK)

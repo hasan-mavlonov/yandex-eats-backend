@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.utils import timezone
 
 from conf import settings
 
@@ -27,7 +30,6 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = [
-        ('super_admin', 'Super Admin'),
         ('company_manager', 'Company Manager'),
         ('branch_manager', 'Branch Manager'),
         ('client', 'Client'),
@@ -36,7 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     id = models.AutoField(primary_key=True)
     phone = models.CharField(max_length=15, unique=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, default="None")
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='client')
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -48,16 +50,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'phone'
-    REQUIRED_FIELDS = ['name']  # Required for createsuperuser
+    REQUIRED_FIELDS = []
 
     def __str__(self):
-        return f"{self.name} ({self.phone}) - {self.role}"
+        return self.phone
 
 
 class PhoneVerification(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='phone_verification')
-    phone_verification_code = models.CharField(max_length=6, unique=True)  # Increased to 6 for better security
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    phone_verification_code = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return self.created_at + timedelta(minutes=5) < timezone.now()
 
     def __str__(self):
         return f'{self.user.phone} - Verification Code: {self.phone_verification_code}'

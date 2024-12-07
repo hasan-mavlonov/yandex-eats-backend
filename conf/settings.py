@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     'users',
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',  # Optional, for Swagger UI
 ]
 
 MIDDLEWARE = [
@@ -142,15 +144,34 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.TokenAuthentication"
     ),
-    "DEFAULT_PAGINATION_CLASS": (
+    "DEFAULT_PERMISSION_CLASSES": (
         'rest_framework.permissions.AllowAny',
+    ),
+    "DEFAULT_PAGINATION_CLASS": (
         'users.pagination.UserPagination',
     ),
+    "DEFAULT_SCHEMA_CLASS": 'drf_spectacular.openapi.AutoSchema',  # Add drf-spectacular schema
     'PAGE_SIZE': 10,
 }
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'My API',
+    'DESCRIPTION': 'API documentation for my project',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,  # Set to True if you want the schema included in the API views
+    'SWAGGER_UI_SETTINGS': {
+        'persistAuthorization': True,  # Allows token persistence in Swagger
+    },
+    'SECURITY': [
+        {
+            'BearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+            },
+        },
+    ],
+}
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
