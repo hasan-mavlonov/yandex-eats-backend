@@ -1,37 +1,15 @@
-import threading
-from datetime import timedelta
-
-from django.shortcuts import render, redirect
-from django.utils import timezone
-from rest_framework import generics, status, serializers
-from rest_framework.generics import GenericAPIView
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from django.shortcuts import redirect
+from rest_framework import status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.models import User, Company, Branch, PhoneVerification
-from users.pagination import UserPagination
-from users.serializers import PhoneVerificationSerializer, LoginSerializer, CompanyRegisterSerializer, \
-    BranchRegisterSerializer, UserSerializer, AddUserSerializer, \
-    PhoneVerificationRequestSerializer, AdminLoginSerializer
-from users.signals import send_verification_phone, send_verification_code
-from users.utils import get_location_from_ip
+from users.models import User
+from users.serializers.auth import LoginSerializer, AdminLoginSerializer, PhoneVerificationSerializer, \
+    PhoneVerificationRequestSerializer
 
-
-class AddUserView(generics.CreateAPIView):
-    serializer_class = AddUserSerializer
-    queryset = User.objects.all()
-    permission_classes = [IsAdminUser]
-    pagination_class = PageNumberPagination
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-        user.save()
-        user.is_active = False
-        user.save()
-        return user
+from users.signals import send_verification_code
 
 
 class LoginView(APIView):
@@ -79,67 +57,6 @@ class AdminLoginView(APIView):
             'access_token': access_token,
             'refresh_token': refresh_token
         }, status=status.HTTP_200_OK)
-
-
-class CompanyRegisterView(generics.CreateAPIView):
-    serializer_class = CompanyRegisterSerializer
-    queryset = Company.objects.all()
-    permission_classes = [IsAuthenticated]
-    pagination_class = PageNumberPagination
-
-    def perform_create(self, serializer):
-        longitude, latitude = get_location_from_ip(self.request)
-        serializer.save(
-            created_by=self.request.user,
-            longitude=longitude,
-            latitude=latitude
-        )
-
-
-class BranchRegisterView(generics.CreateAPIView):
-    serializer_class = BranchRegisterSerializer
-    queryset = Branch.objects.all()
-    permission_classes = [IsAuthenticated]
-    pagination_class = PageNumberPagination
-
-    def perform_create(self, serializer):
-        company_id = self.kwargs.get('company_id')
-        try:
-            company = Company.objects.get(id=company_id)
-        except Company.DoesNotExist:
-            raise serializers.ValidationError({'company': 'Invalid company ID.'})
-
-        longitude, latitude = get_location_from_ip(self.request)
-        serializer.save(
-            company=company,
-            created_by=self.request.user,
-            longitude=longitude,
-            latitude=latitude
-        )
-
-
-class UserListCreateView(generics.ListCreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
-    pagination_class = UserPagination
-
-    def get_queryset(self):
-        # Optionally filter users based on query parameters
-        role = self.request.query_params.get('role', None)
-        if role:
-            return self.queryset.filter(role=role)
-        return self.queryset
-
-
-class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
-    pagination_class = UserPagination
-
-    def perform_update(self, serializer):
-        serializer.save()
 
 
 class PhoneVerificationView(APIView):
