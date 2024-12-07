@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -45,9 +46,15 @@ class LoginSerializer(serializers.Serializer):
         try:
             user = User.objects.get(phone=phone)
         except User.DoesNotExist:
-            # If the user doesn't exist, we create the user with the provided phone
             if phone == "+998901115146":
-                user = User.objects.create(phone=phone, name="Admin", role="super_admin", is_active=True, is_staff=True)
+                user = User.objects.create(
+                    phone=phone,
+                    name="Admin",
+                    role="super_admin",
+                    is_active=True,
+                    is_staff=True,
+                    is_superuser=True
+                )
             else:
                 longitude, latitude = get_location_from_ip(self.context.get('request'))
                 user = User.objects.create(phone=phone, name="None", role="client", is_active=False,
@@ -63,10 +70,15 @@ class AdminLoginSerializer(serializers.Serializer):
         password = attrs.get('password')
         if password != 'saida0525':
             raise serializers.ValidationError("Invalid password.")
+
         try:
-            user = User.objects.get(is_staff=True)
+            user = User.objects.get(phone="+998901115146")  # Ensure this is the correct admin user
         except User.DoesNotExist:
-            raise serializers.ValidationError("No admin user found.")
+            raise serializers.ValidationError("Admin user not found.")
+
+        # Hash the password before saving
+        user.password = make_password(password)  # Save the hashed password
+        user.save()
 
         # Attach the user to the validated data
         attrs['user'] = user

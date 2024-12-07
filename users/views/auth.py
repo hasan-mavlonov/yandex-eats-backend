@@ -20,14 +20,17 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
         phone = serializer.validated_data.get('phone')
         user = serializer.validated_data['user']
+
         if user.is_staff or user.is_superuser:
-            return redirect('admin-login')
+            return redirect('admin-login')  # Redirect to Admin Login view if the user is a staff member
+
         if not user.is_active:
-            return redirect('send-phone-verification-code')
-        else:
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
+            return redirect('send-phone-verification-code')  # Redirect if user is not active
+
+        # Generate JWT tokens for a regular user
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
 
         return Response({
             'message': 'User logged in successfully!',
