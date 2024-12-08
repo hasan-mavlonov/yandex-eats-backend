@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from users.models import User
 from users.pagination import UserPagination
 from users.serializers.users import AddUserSerializer, UserSerializer
+from users.utils import get_location_from_ip
 
 
 class AddUserView(generics.CreateAPIView):
@@ -15,7 +16,7 @@ class AddUserView(generics.CreateAPIView):
     def perform_create(self, serializer):
         user = serializer.save()
         user.save()
-        user.is_active = False
+        user.is_active = True
         user.save()
         return user
 

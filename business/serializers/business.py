@@ -19,3 +19,9 @@ class BranchRegisterSerializer(serializers.ModelSerializer):
         if Branch.objects.filter(name=name, company_id=company_id).exists():
             raise serializers.ValidationError('Branch with this name already exists in the company.')
         return name
+
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['name', 'created_by_name', 'manager_name']

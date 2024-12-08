@@ -27,7 +27,6 @@ class LoginView(APIView):
         if not user.is_active:
             return redirect('send-phone-verification-code')  # Redirect if user is not active
 
-        # Generate JWT tokens for a regular user
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
