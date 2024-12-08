@@ -74,3 +74,60 @@ The backend relies on a robust and scalable database design tailored to simulate
    git clone https://github.com/yourusername/yandex-eats-backend.git
    cd yandex-eats-backend
 
+
+## User Management
+
+The project defines five distinct user roles, each with specific responsibilities and privileges:
+
+### 1. Super Admin
+- **Overview:** The highest-level user with complete control and administrative privileges.
+- **Responsibilities:**
+  - Create and manage **Company Managers**.
+  - Create and manage **Companies**.
+    - A company cannot be created without assigning a **Company Manager**.
+  - View and modify information for all users, including **Company Managers**, **Branch Managers**, **Clients**, and **Delivery Personnel**.
+- **Authority:** Acts as the "God" user with the ability to intervene in all aspects of the system.
+
+---
+
+### 2. Company Manager
+- **Overview:** Manages a company’s operations and personnel.
+- **Responsibilities:**
+  - Create and manage:
+    - **Branches** (must have an assigned **Branch Manager**).
+    - **Branch Managers**.
+    - **Delivery Personnel** (not tied to specific branches).
+  - Oversee company-wide structure and ensure operational readiness.
+- **Delivery Flexibility:** While **Delivery Personnel** are created by a specific **Company Manager**, they can deliver orders from any branch in the company.
+
+---
+
+### 3. Branch Manager
+- **Overview:** Oversees branch-specific operations and inventory.
+- **Responsibilities:**
+  - Create and manage:
+    - **Menus** tailored to the branch.
+    - **Food Items** within the menu.
+  - Ensure smooth branch-level operations.
+
+---
+
+### 4. Client
+- **Overview:** End-users who interact with the platform to place orders.
+- **Responsibilities:**
+  - View menus from the nearest branch based on geolocation (latitude and longitude).
+  - Create and manage orders.
+  - Interact with the company’s offerings based on proximity.
+
+---
+
+### 5. Delivery Personnel
+- **Overview:** Facilitates order delivery and manages order statuses.
+- **Responsibilities:**
+  - Deliver orders dynamically from any branch within the company.
+  - Update the **Order Status**:
+    - `Pending` → `Preparing` → `Completed` → `Cancelled`.
+  - Maintain real-time availability and status updates.
+- **Flexibility:** Can operate across multiple branches under the same company.
+
+---
