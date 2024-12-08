@@ -67,3 +67,9 @@ class CompanyListView(generics.ListAPIView):
         if company_id:
             return Company.objects.filter(id=company_id).order_by('created_at')
         return Company.objects.all().order_by('created_at')
+
+
+class CompanyDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = CompanySerializer
+    queryset = Company.objects.all()
+    permission_classes = [IsAuthenticated]

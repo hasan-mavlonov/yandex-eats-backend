@@ -25,3 +25,15 @@ class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = ['name', 'created_by_name', 'manager_name']
+
+    def validate(self, data):
+        # Get the current user
+        user = self.context.get('request').user
+
+        # Ensure the user is either the creator or the manager
+        if user.name != data.get('created_by_name') and user.name != data.get('manager_name'):
+            raise serializers.ValidationError(
+                "You are not authorized to access or modify this company."
+            )
+
+        return data
