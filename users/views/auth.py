@@ -32,7 +32,7 @@ class LoginView(APIView):
         refresh_token = str(refresh)
 
         return Response({
-            'message': 'User logged in successfully!',
+            'message': f'{user.get_role_display()} logged in successfully!',
             'access_token': access_token,
             'refresh_token': refresh_token
         }, status=status.HTTP_200_OK)
