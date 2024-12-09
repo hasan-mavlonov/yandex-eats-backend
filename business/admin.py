@@ -15,7 +15,5 @@ admin.site.register(Company, CompanyAdmin)
 
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'company', 'manager', 'active', 'latitude', 'longitude', 'created_at')
-    search_fields = ('name', 'company__name', 'manager__name')
-    list_filter = ('active', 'created_at')
-    ordering = ('-created_at',)
+    list_display = (
+    'id', 'name', 'company', 'created_by_name', 'manager_name', 'active', 'latitude', 'longitude', 'created_at')

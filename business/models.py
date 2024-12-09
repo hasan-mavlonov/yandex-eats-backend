@@ -21,12 +21,8 @@ class Branch(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='branches')
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_branches'
-    )
-    manager = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='managed_branches'
-    )
+    created_by_name = models.CharField(max_length=255)
+    manager_name = models.CharField(max_length=255)
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
     active = models.BooleanField(default=True)
