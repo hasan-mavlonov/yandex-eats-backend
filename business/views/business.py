@@ -3,7 +3,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from business.models import Company, Branch
-from business.serializers.business import CompanyRegisterSerializer, BranchRegisterSerializer, CompanySerializer
+from business.serializers.business import CompanyRegisterSerializer, BranchRegisterSerializer, CompanySerializer, \
+    BranchSerializer
 from users.models import User
 from users.utils import get_location_from_ip
 
@@ -88,4 +89,23 @@ class CompanyListView(generics.ListAPIView):
 class CompanyDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CompanySerializer
     queryset = Company.objects.all()
+    permission_classes = [IsAuthenticated]
+
+
+class BranchListView(generics.ListAPIView):
+    serializer_class = BranchSerializer
+    queryset = Branch.objects.all().order_by('created_at')  # Add ordering by created_at or another field
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        branch_id = self.kwargs.get('branch_id')
+        if branch_id:
+            return Branch.objects.filter(id=branch_id).order_by('created_at')
+        return Branch.objects.all().order_by('created_at')
+
+
+class BranchDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = BranchSerializer
+    queryset = Branch.objects.all()
     permission_classes = [IsAuthenticated]
