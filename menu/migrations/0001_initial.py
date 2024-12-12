@@ -9,35 +9,33 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
+        ('business', '0001_initial'),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Company',
+            name='FoodItem',
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=255, unique=True)),
-                ('created_by_name', models.CharField(max_length=255)),
-                ('manager_name', models.CharField(max_length=255)),
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=255)),
+                ('description', models.TextField(blank=True, null=True)),
+                ('price', models.DecimalField(decimal_places=2, max_digits=10)),
+                ('image', models.ImageField(upload_to='food_items/')),
+                ('available', models.BooleanField(default=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('latitude', models.DecimalField(decimal_places=6, max_digits=9)),
-                ('longitude', models.DecimalField(decimal_places=6, max_digits=9)),
             ],
         ),
         migrations.CreateModel(
-            name='Branch',
+            name='Menu',
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False)),
                 ('name', models.CharField(max_length=255)),
-                ('created_by_name', models.CharField(max_length=255)),
-                ('manager_name', models.CharField(max_length=255)),
                 ('latitude', models.DecimalField(decimal_places=6, max_digits=9)),
                 ('longitude', models.DecimalField(decimal_places=6, max_digits=9)),
-                ('active', models.BooleanField(default=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('company', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='branches', to='business.company')),
+                ('branch', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='menus', to='business.branch')),
             ],
         ),
     ]
