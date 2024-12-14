@@ -1,0 +1,9 @@
+---
+name: Checks
+
+
+on: [ push ]
+jobs:
+  test:
+    name: Testing
+    runs-on: ubuntu
