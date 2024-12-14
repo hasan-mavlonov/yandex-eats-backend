@@ -1,4 +1,4 @@
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import F, FloatField
 from django.db.models.functions import Sqrt, Power
@@ -42,3 +42,6 @@ class NearestFoodItemsView(APIView):
         # Serialize the data
         serializer = FoodItemSerializer(nearest_food_items, many=True)
         return Response(serializer.data)
+
+
+

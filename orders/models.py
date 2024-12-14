@@ -8,7 +8,7 @@ from menu.models import Menu
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
-        ('preparing', 'Preparing'),
+        ('delivering', 'Delivering'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
     ]
@@ -36,3 +36,4 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"Item {self.menu.name} (x{self.quantity}) in Order {self.order.id}"
+
