@@ -1,7 +1,7 @@
-
 from rest_framework import serializers
 
 from users.models import User
+from users.utils import get_location_from_ip
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -20,6 +20,18 @@ class AddUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'name', 'phone', 'role']
+
+    def create(self, validated_data):
+        # Get location from the IP address
+        request = self.context.get('request')
+        if request:
+            longitude, latitude = get_location_from_ip(request)
+            validated_data['longitude'] = longitude
+            validated_data['latitude'] = latitude
+
+        # Save the user with the updated location
+        user = User.objects.create(**validated_data)
+        return user
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)

@@ -29,8 +29,6 @@ class CreateFoodItemView(generics.CreateAPIView):
             raise serializers.ValidationError(
                 {'menu': 'Invalid menu ID or you are not authorized for this menu.'}
             )
-
-        # Save the food item with the validated menu
         serializer.save()
 
 
