@@ -74,24 +74,3 @@ class PhoneVerification(models.Model):
         verbose_name = 'Phone Verification'
         verbose_name_plural = 'Phone Verifications'
         ordering = ['-created_at']  # Newest first
-
-
-class Delivery(models.Model):
-    STATUS_CHOICES = [
-        ('assigned', 'Assigned'),
-        ('in_transit', 'In Transit'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-    ]
-
-    id = models.AutoField(primary_key=True)
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='delivery')
-    delivery_person = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='deliveries'
-    )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='assigned')
-    assigned_at = models.DateTimeField(null=True, blank=True)
-    completed_at = models.DateTimeField(null=True, blank=True)
-
-    def __str__(self):
-        return f"Delivery {self.id} - {self.status}"

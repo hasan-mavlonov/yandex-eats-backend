@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from users.models import User, PhoneVerification, Delivery, Menu
+from users.models import User, PhoneVerification, Menu
 
 
 @admin.register(User)
@@ -21,9 +21,3 @@ class MenuAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
 
 
-@admin.register(Delivery)
-class DeliveryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'order', 'delivery_person', 'status', 'assigned_at', 'completed_at')
-    search_fields = ('order__id', 'delivery_person__name', 'status')
-    list_filter = ('status', 'assigned_at', 'completed_at')
-    ordering = ('-assigned_at',)
