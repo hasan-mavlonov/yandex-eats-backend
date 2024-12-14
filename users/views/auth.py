@@ -1,7 +1,9 @@
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -114,5 +116,6 @@ class SendPhoneVerificationCodeView(APIView):
         # Send the verification code via SMS
         send_verification_code(phone)
 
-        return Response({'message': 'Verification code sent successfully! Please check your phone.'},
-                        status=status.HTTP_200_OK)
+        # Redirect to the 'verify-phone' view for phone verification
+        verify_phone_url = reverse('verify-phone')  # Get the URL for the verify-phone view
+        return HttpResponseRedirect(verify_phone_url)  # Redirect the user to verify-phone page
