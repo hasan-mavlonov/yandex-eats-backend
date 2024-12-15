@@ -29,7 +29,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.12  # Adjust as per your requirement
+          python-version: 3.12  # Adjust to your requirement
 
       - name: Install dependencies
         run: |
@@ -45,20 +45,19 @@ jobs:
           done
           echo "PostgreSQL is ready!"
 
-      - name: Load environment variables
+      - name: Set up environment variables
         run: |
-          # Load .env file if it exists
+          # Load .env file if it exists and add to the environment
           if [ -f .env ]; then
             export $(cat .env | xargs)
           fi
-        shell: bash
-
-      - name: Set up Django environment variables
-        run: |
+          # Set the Django-specific environment variables from GitHub secrets
           echo "MY_ACCOUNT_SID=${{ secrets.MY_ACCOUNT_SID }}" >> $GITHUB_ENV
           echo "TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}" >> $GITHUB_ENV
+          echo "MY_TWILIO_NUMBER=${{ secrets.MY_TWILIO_NUMBER }}" >> $GITHUB_ENV
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
 
-      - name: Run tests
+      - name: Run Django tests
         run: |
           source venv/bin/activate
           python manage.py wait_for_db
