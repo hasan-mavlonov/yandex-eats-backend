@@ -59,7 +59,7 @@ class LoginViewTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access_token', response.data)
         self.assertIn('refresh_token', response.data)
-        self.assertEqual(response.data['message'], 'client logged in successfully!')
+        self.assertEqual(response.data['message'], 'Client logged in successfully!')
 
 
 class AdminLoginViewTest(TestCase):
