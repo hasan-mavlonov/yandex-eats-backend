@@ -5,7 +5,7 @@ ENV PYTHONUNBUFFERED=1
 ENV DB_NAME=yandex_eats_backend
 ENV DB_USER=postgres
 ENV DB_PASSWORD=saida0525
-ENV DB_HOST=db
+ENV DB_HOST=localhost
 ENV DB_PORT=5432
 
 # Create a new user and set as the default user
