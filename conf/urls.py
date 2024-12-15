@@ -10,7 +10,7 @@ urlpatterns = [
     path('menus/', include("menu.urls.menus"), name='menus'),
     path('items/', include("menu.urls.items"), name='items'),
     path('orders/', include("orders.urls.orders"), name='orders'),
-    path('deliveries', include("orders.urls.deliveries"), name='deliveries'),
+    path('deliveries/', include("orders.urls.deliveries"), name='deliveries'),
     path('auth/', include("users.urls.auth"), name='auth'),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

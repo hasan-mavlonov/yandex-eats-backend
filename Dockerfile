@@ -1,31 +1,32 @@
 FROM python:3.12
+LABEL maintainer="yandex_eats_backend"
+ENV PYTHONUNBUFFERED=1
+
+ENV DB_NAME=yandex_eats_backend
+ENV DB_USER=postgres
+ENV DB_PASSWORD=saida0525
+ENV DB_HOST=db
+ENV DB_PORT=5432
 
 # Create a new user and set as the default user
-RUN useradd -m django_user
-USER django_user
+COPY ./requirements.txt /app/requirements.txt
+RUN python -m venv /venv && \
+    /venv/bin/pip install --upgrade pip && \
+    /venv/bin/pip install -r /app/requirements.txt && \
+    adduser --disabled-password django-user && \
+    chown -R django-user /app
 
-# Set the working directory
+# Copy the rest of the application code
+COPY ./ /app
 WORKDIR /app
 
-# Copy the requirements file and install dependencies
-COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Create and activate the virtual environment inside the working directory
-RUN python -m venv /app/venv
-RUN /app/venv/bin/pip install --no-cache-dir -r requirements.txt
-
-# Copy your application code
-COPY . /app
-
 # Set environment variables
-ENV PYTHONPATH=/app
+USER django-user
+
+ENV PATH="/venv/bin:$PATH"
 
 # Expose the port that the app will run on
 EXPOSE 8000
 
-# Set the user back to django_user
-USER django_user
-
 # Command to run the application with the virtual environment
-CMD ["/app/venv/bin/python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
