@@ -56,6 +56,7 @@ jobs:
           echo "TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}" >> $GITHUB_ENV
           echo "MY_TWILIO_NUMBER=${{ secrets.MY_TWILIO_NUMBER }}" >> $GITHUB_ENV
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
+          echo "DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" >> $GITHUB_ENV  # Add the DJANGO_SECRET_KEY
 
       - name: Run Django tests
         run: |
