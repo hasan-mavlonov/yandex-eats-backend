@@ -72,7 +72,7 @@ The backend relies on a robust and scalable database design tailored to simulate
 ### Steps  
 1. Clone the repository:  
    ```bash
-   git clone https://github.com/yourusername/yandex-eats-backend.git
+   git clone https://github.com/hasan-mavlonov/yandex-eats-backend.git
    cd yandex-eats-backend
 
 
