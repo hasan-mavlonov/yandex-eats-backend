@@ -2,31 +2,29 @@ FROM python:3.12
 LABEL maintainer="yandex_eats_backend"
 ENV PYTHONUNBUFFERED=1
 
-ENV DB_NAME=yandex_eats_backend
-ENV DB_USER=postgres
-ENV DB_PASSWORD=saida0525
-ENV DB_HOST=localhost
-ENV DB_PORT=5432
+# Set work directory and create a non-root user
+WORKDIR /app
+RUN adduser --disabled-password django-user
 
-# Create a new user and set as the default user
+# Install dependencies (optimized for caching)
 COPY ./requirements.txt /app/requirements.txt
 RUN python -m venv /venv && \
     /venv/bin/pip install --upgrade pip && \
-    /venv/bin/pip install -r /app/requirements.txt && \
-    adduser --disabled-password django-user && \
-    chown -R django-user /app
+    /venv/bin/pip install -r /app/requirements.txt
 
-# Copy the rest of the application code
+# Copy the rest of the application code and adjust ownership
 COPY ./ /app
-WORKDIR /app
+RUN chown -R django-user /app
 
-# Set environment variables
+# Switch to non-root user
 USER django-user
 
+# Set the virtual environment path
 ENV PATH="/venv/bin:$PATH"
 
-# Expose the port that the app will run on
+# Expose the default port
 EXPOSE 8000
 
-# Command to run the application with the virtual environment
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Default development command (use Gunicorn/Daphne for production)
+CMD ["gunicorn", "myproject.wsgi:application", "--bind", "0.0.0.0:8000"]
+

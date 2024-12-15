@@ -13,11 +13,11 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_DB: yandex_eats_backend
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
         options: >-
-          --health-cmd="pg_isready -U postgres"
+          --health-cmd="pg_isready -h dpg-ctfg5cl2ng1s738jf5s0-a.frankfurt-postgres.render.com -U ${{ secrets.DB_USER }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -39,7 +39,7 @@ jobs:
 
       - name: Wait for PostgreSQL to be ready
         run: |
-          until pg_isready -h localhost -U postgres; do
+          until pg_isready -h ${{ secrets.DB_HOST }} -U ${{ secrets.DB_USER }} -p ${{ secrets.DB_PORT }}; do
             echo "Waiting for PostgreSQL to be ready..."
             sleep 2
           done
@@ -47,16 +47,15 @@ jobs:
 
       - name: Set up environment variables
         run: |
-          # Load .env file if it exists and add to the environment
-          if [ -f .env ]; then
-            export $(cat .env | xargs)
-          fi
-          # Set the Django-specific environment variables from GitHub secrets
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
+          echo "DB_USER=${{ secrets.DB_USER }}" >> $GITHUB_ENV
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> $GITHUB_ENV
           echo "MY_ACCOUNT_SID=${{ secrets.MY_ACCOUNT_SID }}" >> $GITHUB_ENV
           echo "TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}" >> $GITHUB_ENV
           echo "MY_TWILIO_NUMBER=${{ secrets.MY_TWILIO_NUMBER }}" >> $GITHUB_ENV
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
-          echo "DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" >> $GITHUB_ENV  # Add the DJANGO_SECRET_KEY
+          echo "DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" >> $GITHUB_ENV
 
       - name: Run Django tests
         run: |
