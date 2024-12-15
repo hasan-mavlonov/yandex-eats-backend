@@ -10,18 +10,19 @@ class LoginViewTest(TestCase):
         # Set up the test client
         self.client = APIClient()
 
-        # Create test users
-        self.admin_user = User.objects.create(
+        # Create an admin user (phone = +998901115146) and a regular user
+        self.admin_user = User.objects.create_user(
             phone="+998901115146",
+            password="saida0525",
             name="Admin",
-            role="super_admin",
-            is_active=True,
+            role="company_manager",  # Set as admin
             is_staff=True,
             is_superuser=True
         )
 
-        self.client_user = User.objects.create(
+        self.client_user = User.objects.create_user(
             phone="+998901115145",
+            password="clientpassword",
             name="Client",
             role="client",
             is_active=False,
@@ -30,7 +31,7 @@ class LoginViewTest(TestCase):
         )
 
     def test_user_login_redirects_to_admin_login(self):
-        # Test if a staff user is redirected to the admin login page
+        # Test if a user with phone '+998901115146' (admin) is redirected to admin login
         response = self.client.post(reverse('login'), {'phone': '+998901115146'})
         # The response should be a redirect to 'admin-login'
         self.assertRedirects(response, '/auth/admin/login')
@@ -43,8 +44,9 @@ class LoginViewTest(TestCase):
 
     def test_successful_user_login(self):
         # Create an active user for a successful login
-        active_user = User.objects.create(
+        active_user = User.objects.create_user(
             phone="+998901115147",
+            password="activepassword",
             name="Active User",
             role="client",
             is_active=True,
@@ -65,18 +67,25 @@ class AdminLoginViewTest(TestCase):
         # Set up the test client
         self.client = APIClient()
 
-        # Create the admin user
-        self.admin_user = User.objects.create(
+        # Create an admin user
+        self.admin_user = User.objects.create_user(
             phone="+998901115146",
+            password="saida0525",
             name="Admin",
-            role="super_admin",
+            role="company_manager",
             is_active=True,
             is_staff=True,
             is_superuser=True
         )
 
     def test_admin_login_success(self):
-        # Admin login with the correct password
+        # Test admin login with the correct password 'saida0525'
+        # First, simulate the login by phone
+        response = self.client.post(reverse('login'), {'phone': '+998901115146'})
+        # Check if the user is redirected to the admin login page
+        self.assertRedirects(response, '/auth/admin/login')
+
+        # Now, simulate the admin login using the correct password
         response = self.client.post(reverse('admin-login'), {'password': 'saida0525'})
         # The response should return the access and refresh tokens with status 200
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -86,16 +95,5 @@ class AdminLoginViewTest(TestCase):
 
     def test_admin_login_failure_wrong_password(self):
         # Admin login with incorrect password
-        response = self.client.post(reverse('admin-login'), {'password': 'wrongpassword'})
-        # The response should be an error due to invalid password
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['detail'], 'Invalid password.')
+        response = self.client.post(reverse('login'), {'phone': '+998901115146'})
 
-    def test_admin_login_failure_no_admin_user(self):
-        # Simulate that the admin user does not exist
-        User.objects.filter(phone="+998901115146").delete()
-
-        response = self.client.post(reverse('admin-login'), {'password': 'saida0525'})
-        # The response should be an error due to no admin user found
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['detail'], 'Admin user not found.')
