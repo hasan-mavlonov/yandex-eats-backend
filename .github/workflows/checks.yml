@@ -1,6 +1,6 @@
 name: Checks
 
-on: [ push ]
+on: [push]
 
 jobs:
   test:
@@ -15,7 +15,7 @@ jobs:
         env:
           POSTGRES_DB: yandex_eats_backend
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}  # Use GitHub Secrets for DB password
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         options: >-
           --health-cmd="pg_isready -U postgres"
           --health-interval=10s
@@ -45,13 +45,18 @@ jobs:
           done
           echo "PostgreSQL is ready!"
 
+      - name: Load environment variables
+        run: |
+          # Load .env file if it exists
+          if [ -f .env ]; then
+            export $(cat .env | xargs)
+          fi
+        shell: bash
+
       - name: Set up Django environment variables
         run: |
-          echo "DB_NAME=yandex_eats_backend" >> $GITHUB_ENV
-          echo "DB_USER=postgres" >> $GITHUB_ENV
-          echo "DB_HOST=db" >> $GITHUB_ENV
-          echo "DB_PORT=5432" >> $GITHUB_ENV
-          echo "MY_ACCOUNT_SID=${{ secrets.MY_ACCOUNT_SID }}" >> $GITHUB_ENV  # Set MY_ACCOUNT_SID secret
+          echo "MY_ACCOUNT_SID=${{ secrets.MY_ACCOUNT_SID }}" >> $GITHUB_ENV
+          echo "TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}" >> $GITHUB_ENV
 
       - name: Run tests
         run: |
