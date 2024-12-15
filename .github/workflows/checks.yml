@@ -1,6 +1,6 @@
 name: Checks
 
-on: [push]
+on: [ push ]
 
 jobs:
   test:
@@ -51,6 +51,7 @@ jobs:
           echo "DB_USER=postgres" >> $GITHUB_ENV
           echo "DB_HOST=db" >> $GITHUB_ENV
           echo "DB_PORT=5432" >> $GITHUB_ENV
+          echo "MY_ACCOUNT_SID=${{ secrets.MY_ACCOUNT_SID }}" >> $GITHUB_ENV  # Set MY_ACCOUNT_SID secret
 
       - name: Run tests
         run: |
@@ -58,4 +59,3 @@ jobs:
           python manage.py wait_for_db
           python manage.py migrate
           python manage.py test
-
