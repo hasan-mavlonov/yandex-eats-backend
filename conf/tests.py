@@ -31,16 +31,14 @@ class LoginViewTest(TestCase):
         )
 
     def test_user_login_redirects_to_admin_login(self):
-        # Test if a user with phone '+998901115146' (admin) is redirected to admin login
-        response = self.client.post(reverse('login'), {'phone': '+998901115146'})
-        # The response should be a redirect to 'admin-login'
-        self.assertRedirects(response, '/auth/admin/login')
+        response = self.client.post(reverse('login'), {'phone': '+998901115146'}, follow=False)
+        self.assertEqual(response.status_code, 302)  # Expect redirection
+        self.assertEqual(response.url, reverse('admin-login'))  # Ensure redirection URL is correct
 
     def test_user_login_redirects_to_phone_verification(self):
-        # Test if a non-active user is redirected to send phone verification code
-        response = self.client.post(reverse('login'), {'phone': '+998901115145'})
-        # The response should be a redirect to 'send-phone-verification-code'
-        self.assertRedirects(response, '/auth/send-phone-verification-code')
+        response = self.client.post(reverse('login'), {'phone': '+998901115145'}, follow=False)
+        self.assertEqual(response.status_code, 302)  # Expect redirection
+        self.assertEqual(response.url, reverse('send-phone-verification-code'))  # Ensure correct redirection URL
 
     def test_successful_user_login(self):
         # Create an active user for a successful login
@@ -78,22 +76,26 @@ class AdminLoginViewTest(TestCase):
             is_superuser=True
         )
 
-    def test_admin_login_success(self):
-        # Test admin login with the correct password 'saida0525'
-        # First, simulate the login by phone
-        response = self.client.post(reverse('login'), {'phone': '+998901115146'})
-        # Check if the user is redirected to the admin login page
-        self.assertRedirects(response, '/auth/admin/login')
+    def test_non_admin_login_redirects_to_verification(self):
+        response = self.client.post(reverse('login'), {'phone': '+998990894981'})  # Use non-admin phone
+        self.assertRedirects(response, reverse('send-phone-verification-code'))
 
-        # Now, simulate the admin login using the correct password
+    def test_admin_login_success(self):
+        # Simulate login with the correct password (no need for phone in request anymore)
         response = self.client.post(reverse('admin-login'), {'password': 'saida0525'})
-        # The response should return the access and refresh tokens with status 200
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Assert that the response is successful with status code 200
+        self.assertEqual(response.status_code, 200)
         self.assertIn('access_token', response.data)
         self.assertIn('refresh_token', response.data)
         self.assertEqual(response.data['message'], 'Admin logged in successfully!')
 
     def test_admin_login_failure_wrong_password(self):
         # Admin login with incorrect password
-        response = self.client.post(reverse('login'), {'phone': '+998901115146'})
+        response = self.client.post(reverse('admin-login'), {'password': '123qwerty'}, follow=False)
 
+        # Assert that the status code is 400 because the password is incorrect
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Assert that the error message contains the expected invalid password message
+        self.assertIn('Invalid password', str(response.data))

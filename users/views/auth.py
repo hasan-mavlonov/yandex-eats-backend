@@ -1,5 +1,5 @@
 from django.http import HttpResponseRedirect
-from django.shortcuts import redirect
+from django.shortcuts import redirect, resolve_url
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -13,9 +13,13 @@ from users.serializers.auth import LoginSerializer, AdminLoginSerializer, PhoneV
 
 from users.signals import send_verification_code
 
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
 
 class LoginView(APIView):
     serializer_class = LoginSerializer
+    http_method_names = ['get', 'post']
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data, context={'request': request})
@@ -24,10 +28,10 @@ class LoginView(APIView):
         user = serializer.validated_data['user']
 
         if user.is_staff or user.is_superuser:
-            return redirect('admin-login')  # Redirect to Admin Login view if the user is a staff member
+            return HttpResponseRedirect(reverse('admin-login'))  # Redirect to Admin Login view
 
         if not user.is_active:
-            return redirect('send-phone-verification-code')  # Redirect if user is not active
+            return HttpResponseRedirect(reverse('send-phone-verification-code'))  # Redirect for phone verification
 
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
@@ -42,7 +46,7 @@ class LoginView(APIView):
 
 class AdminLoginView(APIView):
     serializer_class = AdminLoginSerializer
-
+    http_method_names = ['get', 'post']
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -66,6 +70,7 @@ class AdminLoginView(APIView):
 class PhoneVerificationView(APIView):
     permission_classes = [AllowAny]
     serializer_class = PhoneVerificationSerializer
+    http_method_names = ['get', 'post']
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -97,13 +102,18 @@ class PhoneVerificationView(APIView):
         return Response({"error": "Invalid data or code"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+from django.shortcuts import redirect
+
+
 class SendPhoneVerificationCodeView(APIView):
-    permission_classes = [AllowAny]
-    serializer_class = PhoneVerificationRequestSerializer
+    http_method_names = ['get', 'post']
+
+    def get(self, request):
+        return Response({'message': 'Send a POST request with the phone number to receive a verification code.'},
+                        status=status.HTTP_200_OK)
 
     def post(self, request):
         phone = request.data.get('phone')
-
         if not phone:
             return Response({'error': 'Phone number is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -113,9 +123,12 @@ class SendPhoneVerificationCodeView(APIView):
             return Response({'error': 'User with this phone number does not exist.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # Send the verification code via SMS
-        send_verification_code(phone)
+        try:
+            # Send the verification code via SMS
+            send_verification_code(phone)
+        except Exception as e:
+            return Response({'error': f'Failed to send verification code: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Redirect to the 'verify-phone' view for phone verification
-        verify_phone_url = reverse('verify-phone')  # Get the URL for the verify-phone view
-        return HttpResponseRedirect(verify_phone_url)  # Redirect the user to verify-phone page
+        # Redirect to the 'verify-phone' view
+        return redirect('verify-phone')  # Django shortcut for HttpResponseRedirect(resolve_url(...))
