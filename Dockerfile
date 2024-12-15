@@ -25,6 +25,4 @@ ENV PATH="/venv/bin:$PATH"
 # Expose the default port
 EXPOSE 8000
 
-# Default development command (use Gunicorn/Daphne for production)
-CMD ["gunicorn", "myproject.wsgi:application", "--bind", "0.0.0.0:8000"]
-
+CMD ["/venv/bin/python", "manage.py", "runserver", "0.0.0.0:8000"]

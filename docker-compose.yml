@@ -19,7 +19,7 @@ services:
         fi &&
         /venv/bin/pip install -r requirements.txt &&
         # Wait for PostgreSQL to be ready
-        /venv/bin/wait-for-it db:5432 -- /venv/bin/python manage.py migrate &&
+        /venv/bin/wait-for-it db:5432 --timeout=30 -- /venv/bin/python manage.py migrate &&
         /venv/bin/python manage.py runserver 0.0.0.0:8000"
     networks:
       - app_network
